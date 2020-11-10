@@ -23,7 +23,7 @@ WORKDIR  /usr/src/Wav2Lip
 COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all the files from the project’s root to the working directory
-COPY ./src ./
+# # Copy all the files from the project’s root to the working directory
+# COPY ./src ./
 
-CMD python3 inference.py --checkpoint_path "./checkpoints/wav2lip_gan.pth" --face "./sample_data/face.jpg" --audio "./sample_data/input_audio.wav" --resize_factor 2
+# CMD python3 inference.py --checkpoint_path "./checkpoints/wav2lip_gan.pth" --face "./sample_data/face.jpg" --audio "./sample_data/input_audio.wav" --resize_factor 2
