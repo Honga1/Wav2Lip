@@ -7,114 +7,6 @@ from glob import glob
 import torch, face_detection
 from models import Wav2Lip
 
-parser = argparse.ArgumentParser(
-    description="Inference code to lip-sync videos in the wild using Wav2Lip models"
-)
-
-parser.add_argument(
-    "--checkpoint_path",
-    type=str,
-    help="Name of saved checkpoint to load weights from",
-    required=True,
-)
-
-parser.add_argument(
-    "--face",
-    type=str,
-    help="Filepath of video/image that contains faces to use",
-    required=True,
-)
-parser.add_argument(
-    "--audio",
-    type=str,
-    help="Filepath of video/audio file to use as raw audio source",
-    required=True,
-)
-parser.add_argument(
-    "--outfile",
-    type=str,
-    help="Video path to save result. See default for an e.g.",
-    default="results/result_voice.mp4",
-)
-
-parser.add_argument(
-    "--static",
-    type=bool,
-    help="If True, then use only first video frame for inference",
-    default=False,
-)
-parser.add_argument(
-    "--fps",
-    type=float,
-    help="Can be specified only if input is a static image (default: 25)",
-    default=25.0,
-    required=False,
-)
-
-parser.add_argument(
-    "--pads",
-    nargs="+",
-    type=int,
-    default=[0, 10, 0, 0],
-    help="Padding (top, bottom, left, right). Please adjust to include chin at least",
-)
-
-parser.add_argument(
-    "--face_det_batch_size", type=int, help="Batch size for face detection", default=16
-)
-parser.add_argument(
-    "--wav2lip_batch_size",
-    type=int,
-    help="Batch size for Wav2Lip model(s)",
-    default=128,
-)
-
-parser.add_argument(
-    "--resize_factor",
-    default=1,
-    type=int,
-    help="Reduce the resolution by this factor. Sometimes, best results are obtained at 480p or 720p",
-)
-
-parser.add_argument(
-    "--crop",
-    nargs="+",
-    type=int,
-    default=[0, -1, 0, -1],
-    help="Crop video to a smaller region (top, bottom, left, right). Applied after resize_factor and rotate arg. "
-    "Useful if multiple face present. -1 implies the value will be auto-inferred based on height, width",
-)
-
-parser.add_argument(
-    "--box",
-    nargs="+",
-    type=int,
-    default=[-1, -1, -1, -1],
-    help="Specify a constant bounding box for the face. Use only as a last resort if the face is not detected."
-    "Also, might work only if the face is not moving around much. Syntax: (top, bottom, left, right).",
-)
-
-parser.add_argument(
-    "--rotate",
-    default=False,
-    action="store_true",
-    help="Sometimes videos taken from a phone can be flipped 90deg. If true, will flip video right by 90deg."
-    "Use if you get a flipped result, despite feeding a normal looking video",
-)
-
-parser.add_argument(
-    "--nosmooth",
-    default=False,
-    action="store_true",
-    help="Prevent smoothing face detections over a short temporal window",
-)
-
-args = parser.parse_args()
-args.img_size = 96
-
-if os.path.isfile(args.face) and args.face.split(".")[1] in ["jpg", "png", "jpeg"]:
-    args.static = True
-
 
 def get_smoothened_boxes(boxes, T):
     for i in range(len(boxes)):
@@ -126,7 +18,7 @@ def get_smoothened_boxes(boxes, T):
     return boxes
 
 
-def face_detect(images):
+def face_detect(images, args):
     detector = face_detection.FaceAlignment(
         face_detection.LandmarksType._2D, flip_input=False, device=device
     )
@@ -182,14 +74,16 @@ def face_detect(images):
     return results
 
 
-def datagen(frames, mels):
+def datagen(frames, mels, args):
     img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
 
     if args.box[0] == -1:
         if not args.static:
-            face_det_results = face_detect(frames)  # BGR2RGB for CNN face detection
+            face_det_results = face_detect(
+                frames, args
+            )  # BGR2RGB for CNN face detection
         else:
-            face_det_results = face_detect([frames[0]])
+            face_det_results = face_detect([frames[0]], args)
     else:
         print("Using the specified bounding box instead of face detection...")
         y1, y2, x1, x2 = args.box
@@ -264,7 +158,53 @@ def load_model(path):
     return model.eval()
 
 
-def main():
+from types import SimpleNamespace
+
+
+def main(
+    checkpoint_path,
+    face,
+    audio,
+    outfile="results/result_voice.mp4",
+    static=False,
+    fps=25.0,
+    pads=[0, 10, 0, 0],
+    face_det_batch_size=16,
+    wav2lip_batch_size=128,
+    resize_factor=1,
+    crop=[0, -1, 0, -1],
+    box=[-1, -1, -1, -1],
+    rotate=False,
+    nosmooth=False,
+    img_size=96,
+):
+    args = SimpleNamespace(
+        checkpoint_path=checkpoint_path,
+        face=face,
+        audio=audio,
+        outfile=outfile,
+        static=static,
+        fps=fps,
+        pads=pads,
+        face_det_batch_size=face_det_batch_size,
+        wav2lip_batch_size=wav2lip_batch_size,
+        resize_factor=resize_factor,
+        crop=crop,
+        box=box,
+        rotate=rotate,
+        nosmooth=nosmooth,
+        img_size=img_size,
+    )
+
+    if os.path.isfile(args.face) and args.face.split(".")[1] in ["jpg", "png", "jpeg"]:
+        args.static = True
+
+    print(args)
+
+    run(args)
+
+
+def run(args):
     if not os.path.isfile(args.face):
         raise ValueError("--face argument must be a valid path to video/image file")
 
@@ -340,7 +280,7 @@ def main():
     full_frames = full_frames[: len(mel_chunks)]
 
     batch_size = args.wav2lip_batch_size
-    gen = datagen(full_frames.copy(), mel_chunks)
+    gen = datagen(full_frames.copy(), mel_chunks, args)
 
     for i, (img_batch, mel_batch, frames, coords) in enumerate(
         tqdm(gen, total=int(np.ceil(float(len(mel_chunks)) / batch_size)))
@@ -381,4 +321,112 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Inference code to lip-sync videos in the wild using Wav2Lip models"
+    )
+
+    parser.add_argument(
+        "--checkpoint_path",
+        type=str,
+        help="Name of saved checkpoint to load weights from",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--face",
+        type=str,
+        help="Filepath of video/image that contains faces to use",
+        required=True,
+    )
+    parser.add_argument(
+        "--audio",
+        type=str,
+        help="Filepath of video/audio file to use as raw audio source",
+        required=True,
+    )
+    parser.add_argument(
+        "--outfile",
+        type=str,
+        help="Video path to save result. See default for an e.g.",
+        default="results/result_voice.mp4",
+    )
+
+    parser.add_argument(
+        "--static",
+        type=bool,
+        help="If True, then use only first video frame for inference",
+        default=False,
+    )
+    parser.add_argument(
+        "--fps",
+        type=float,
+        help="Can be specified only if input is a static image (default: 25)",
+        default=25.0,
+        required=False,
+    )
+
+    parser.add_argument(
+        "--pads",
+        nargs="+",
+        type=int,
+        default=[0, 10, 0, 0],
+        help="Padding (top, bottom, left, right). Please adjust to include chin at least",
+    )
+
+    parser.add_argument(
+        "--face_det_batch_size",
+        type=int,
+        help="Batch size for face detection",
+        default=16,
+    )
+    parser.add_argument(
+        "--wav2lip_batch_size",
+        type=int,
+        help="Batch size for Wav2Lip model(s)",
+        default=128,
+    )
+
+    parser.add_argument(
+        "--resize_factor",
+        default=1,
+        type=int,
+        help="Reduce the resolution by this factor. Sometimes, best results are obtained at 480p or 720p",
+    )
+
+    parser.add_argument(
+        "--crop",
+        nargs="+",
+        type=int,
+        default=[0, -1, 0, -1],
+        help="Crop video to a smaller region (top, bottom, left, right). Applied after resize_factor and rotate arg. "
+        "Useful if multiple face present. -1 implies the value will be auto-inferred based on height, width",
+    )
+
+    parser.add_argument(
+        "--box",
+        nargs="+",
+        type=int,
+        default=[-1, -1, -1, -1],
+        help="Specify a constant bounding box for the face. Use only as a last resort if the face is not detected."
+        "Also, might work only if the face is not moving around much. Syntax: (top, bottom, left, right).",
+    )
+
+    parser.add_argument(
+        "--rotate",
+        default=False,
+        action="store_true",
+        help="Sometimes videos taken from a phone can be flipped 90deg. If true, will flip video right by 90deg."
+        "Use if you get a flipped result, despite feeding a normal looking video",
+    )
+
+    parser.add_argument(
+        "--nosmooth",
+        default=False,
+        action="store_true",
+        help="Prevent smoothing face detections over a short temporal window",
+    )
+
+    args = parser.parse_args()
+    args.img_size = 96
+
+    main(**vars(args))
