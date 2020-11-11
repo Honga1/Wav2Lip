@@ -53,12 +53,24 @@ class s3fd(nn.Module):
         self.conv4_3_norm = L2Norm(512, scale=8)
         self.conv5_3_norm = L2Norm(512, scale=5)
 
-        self.conv3_3_norm_mbox_conf = nn.Conv2d(256, 4, kernel_size=3, stride=1, padding=1)
-        self.conv3_3_norm_mbox_loc = nn.Conv2d(256, 4, kernel_size=3, stride=1, padding=1)
-        self.conv4_3_norm_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)
-        self.conv4_3_norm_mbox_loc = nn.Conv2d(512, 4, kernel_size=3, stride=1, padding=1)
-        self.conv5_3_norm_mbox_conf = nn.Conv2d(512, 2, kernel_size=3, stride=1, padding=1)
-        self.conv5_3_norm_mbox_loc = nn.Conv2d(512, 4, kernel_size=3, stride=1, padding=1)
+        self.conv3_3_norm_mbox_conf = nn.Conv2d(
+            256, 4, kernel_size=3, stride=1, padding=1
+        )
+        self.conv3_3_norm_mbox_loc = nn.Conv2d(
+            256, 4, kernel_size=3, stride=1, padding=1
+        )
+        self.conv4_3_norm_mbox_conf = nn.Conv2d(
+            512, 2, kernel_size=3, stride=1, padding=1
+        )
+        self.conv4_3_norm_mbox_loc = nn.Conv2d(
+            512, 4, kernel_size=3, stride=1, padding=1
+        )
+        self.conv5_3_norm_mbox_conf = nn.Conv2d(
+            512, 2, kernel_size=3, stride=1, padding=1
+        )
+        self.conv5_3_norm_mbox_loc = nn.Conv2d(
+            512, 4, kernel_size=3, stride=1, padding=1
+        )
 
         self.fc7_mbox_conf = nn.Conv2d(1024, 2, kernel_size=3, stride=1, padding=1)
         self.fc7_mbox_loc = nn.Conv2d(1024, 4, kernel_size=3, stride=1, padding=1)

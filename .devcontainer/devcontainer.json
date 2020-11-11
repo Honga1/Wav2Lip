@@ -1,0 +1,28 @@
+{
+  "name": "wav2lip",
+
+  // Sets the run context to one level up instead of the .devcontainer folder.
+  "context": "..",
+
+  "dockerFile": "./Dockerfile",
+
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": ["ms-python.python"],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": ["--generate-members", "--extension-pkg-whitelist=cv2"],
+    "python.formatting.autopep8Path": "/usr/local/bin/autopep8",
+		"python.formatting.blackPath": "/usr/local/bin/black",
+		"python.formatting.yapfPath": "/usr/local/bin/yapf",
+		"python.linting.flake8Path": "/usr/local/bin/flake8",
+		"python.linting.mypyPath": "/usr/local/bin/mypy",
+		"python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
+		"python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
+		"python.linting.pylintPath": "/usr/local/bin/pylint"
+  },
+
+  "forwardPorts": [9000],
+  "remoteUser": "devuser"
+}
