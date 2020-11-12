@@ -5,6 +5,7 @@
   "context": "..",
 
   "dockerFile": "./Dockerfile",
+  "initializeCommand": "make build",
 
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": ["ms-python.python", "esbenp.prettier-vscode"],
@@ -15,13 +16,16 @@
     "python.linting.pylintArgs": ["--generated-members=cv2.*"],
     "python.formatting.autopep8Path": "/usr/local/bin/autopep8",
     "python.formatting.blackPath": "/usr/local/bin/black",
-    "python.formatting.yapfPath": "/usr/local/bin/yapf", 
+    "python.formatting.yapfPath": "/usr/local/bin/yapf",
     "python.linting.flake8Path": "/usr/local/bin/flake8",
     "python.linting.mypyPath": "/usr/local/bin/mypy",
     "python.linting.pycodestylePath": "/usr/local/bin/pycodestyle",
     "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
     "python.linting.pylintPath": "/usr/local/bin/pylint"
   },
+
+  // Uncomment to run on GPU
+  // "runArgs": ["--gpus=all"],
 
   "forwardPorts": [9000],
   "remoteUser": "devuser"
