@@ -1,6 +1,7 @@
 import os
+import io
 from PIL import Image
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, send_file
 from inference import main
 
 app = Flask(__name__)
@@ -34,3 +35,32 @@ def upload_file():
     )
 
     return redirect(request.referrer)
+
+
+@app.route("/three_videos_demo", methods=["GET", "POST"])
+def three_videos_demo():
+    if "image" not in request.files:
+        return "there is no image in form!"
+    if "sound" not in request.files:
+        return "there is no sound in form!"
+    image = request.files["image"]
+    sound = request.files["sound"]
+    path = os.path.join(app.config["UPLOAD_FOLDER"], image.filename + ".webm")
+    image.save(path)
+    path = os.path.join(app.config["UPLOAD_FOLDER"], sound.filename + ".mp4")
+    sound.save(path)
+    main(
+        "./checkpoints/wav2lip_gan.pth",
+        "./sample_data/" + image.filename,
+        "./sample_data/" + sound.filename,
+        resize_factor=4,
+        outfile="./static/result_voice.mp4",
+    )
+
+    with open("./static/result_voice.mp4", "rb") as bites:
+        return send_file(
+            io.BytesIO(bites.read()),
+            attachment_filename="result.mp4",
+            mimetype="video/mp4",
+            as_attachment=True,
+        )
