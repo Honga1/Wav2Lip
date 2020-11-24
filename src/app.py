@@ -53,14 +53,17 @@ def three_videos_demo():
         "./checkpoints/wav2lip_gan.pth",
         "./sample_data/" + image.filename,
         "./sample_data/" + sound.filename,
-        resize_factor=4,
+        resize_factor=1,
         outfile="./static/result_voice.mp4",
     )
 
     with open("./static/result_voice.mp4", "rb") as bites:
-        return send_file(
+        response = send_file(
             io.BytesIO(bites.read()),
             attachment_filename="result.mp4",
             mimetype="video/mp4",
             as_attachment=True,
         )
+
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
