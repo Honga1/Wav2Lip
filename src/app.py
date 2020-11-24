@@ -67,3 +67,17 @@ def three_videos_demo():
 
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
+
+
+@app.route("/three_videos_is_up", methods=["GET", "POST"])
+def three_videos_is_up():
+    with open("./static/video.html", "rb") as bites:
+        response = send_file(
+            io.BytesIO(bites.read()),
+            as_attachment=True,
+            attachment_filename="video.html",
+            mimetype="application/octet-stream",
+        )
+
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
