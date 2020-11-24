@@ -47,6 +47,7 @@ def three_videos_demo():
         return "there is no sound in form!"
     image = request.files["image"]
     sound = request.files["sound"]
+    scale = int(request.form["webcamScale"], 10)
     imageFilename = image.filename + ".webm"
     soundFilename = sound.filename + ".mp4"
     path = os.path.join(app.config["UPLOAD_FOLDER"], imageFilename)
@@ -57,7 +58,7 @@ def three_videos_demo():
         "./checkpoints/wav2lip_gan.pth",
         "./sample_data/" + imageFilename,
         "./sample_data/" + soundFilename,
-        resize_factor=1,
+        resize_factor=scale,
         outfile="./static/result_voice.mp4",
     )
 
