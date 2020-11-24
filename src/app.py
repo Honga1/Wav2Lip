@@ -3,8 +3,10 @@ import io
 from PIL import Image
 from flask import Flask, request, redirect, send_file
 from inference import main
+from flask_ngrok import run_with_ngrok
 
 app = Flask(__name__)
+run_with_ngrok(app)  # Start ngrok when app is run
 UPLOAD_FOLDER = "./sample_data"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -83,3 +85,7 @@ def three_videos_is_up():
 
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
+
+
+if __name__ == "__main__":
+    app.run()
