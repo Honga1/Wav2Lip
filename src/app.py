@@ -49,7 +49,7 @@ def three_videos_demo():
     sound = request.files["sound"]
     scale = int(request.form["webcamScale"], 10)
     imageFilename = image.filename + ".webm"
-    soundFilename = sound.filename + ".mp4"
+    soundFilename = sound.filename + ".wav"
     path = os.path.join(app.config["UPLOAD_FOLDER"], imageFilename)
     image.save(path)
     path = os.path.join(app.config["UPLOAD_FOLDER"], soundFilename)
