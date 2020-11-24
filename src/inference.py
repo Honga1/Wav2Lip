@@ -20,7 +20,7 @@ def get_smoothened_boxes(boxes, T):
 
 def face_detect(images, args):
     detector = face_detection.FaceAlignment(
-        face_detection.LandmarksType._2D, flip_input=False, device=device
+        face_detection.LandmarksType._2D, flip_input=False, device=args.device
     )
 
     batch_size = args.face_det_batch_size
@@ -129,12 +129,7 @@ def datagen(frames, mels, args):
         yield img_batch, mel_batch, frame_batch, coords_batch
 
 
-mel_step_size = 16
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print("Using {} for inference.".format(device))
-
-
-def _load(checkpoint_path):
+def _load(checkpoint_path, device):
     if device == "cuda":
         checkpoint = torch.load(checkpoint_path)
     else:
@@ -144,10 +139,10 @@ def _load(checkpoint_path):
     return checkpoint
 
 
-def load_model(path):
+def load_model(path, device):
     model = Wav2Lip()
     print("Load checkpoint from: {}".format(path))
-    checkpoint = _load(path)
+    checkpoint = _load(path, device)
     s = checkpoint["state_dict"]
     new_s = {}
     for k, v in s.items():
@@ -178,6 +173,10 @@ def main(
     nosmooth=False,
     img_size=96,
 ):
+    mel_step_size = 16
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("Using {} for inference.".format(device))
+
     args = SimpleNamespace(
         checkpoint_path=checkpoint_path,
         face=face,
@@ -194,6 +193,8 @@ def main(
         rotate=rotate,
         nosmooth=nosmooth,
         img_size=img_size,
+        mel_step_size=mel_step_size,
+        device=device,
     )
 
     if os.path.isfile(args.face) and args.face.split(".")[1] in ["jpg", "png", "jpeg"]:
@@ -269,10 +270,10 @@ def run(args):
     i = 0
     while 1:
         start_idx = int(i * mel_idx_multiplier)
-        if start_idx + mel_step_size > len(mel[0]):
-            mel_chunks.append(mel[:, len(mel[0]) - mel_step_size :])
+        if start_idx + args.mel_step_size > len(mel[0]):
+            mel_chunks.append(mel[:, len(mel[0]) - args.mel_step_size :])
             break
-        mel_chunks.append(mel[:, start_idx : start_idx + mel_step_size])
+        mel_chunks.append(mel[:, start_idx : start_idx + args.mel_step_size])
         i += 1
 
     print("Length of mel chunks: {}".format(len(mel_chunks)))
@@ -286,7 +287,7 @@ def run(args):
         tqdm(gen, total=int(np.ceil(float(len(mel_chunks)) / batch_size)))
     ):
         if i == 0:
-            model = load_model(args.checkpoint_path)
+            model = load_model(args.checkpoint_path, args.device)
             print("Model loaded")
 
             frame_h, frame_w = full_frames[0].shape[:-1]
@@ -297,8 +298,12 @@ def run(args):
                 (frame_w, frame_h),
             )
 
-        img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
-        mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
+        img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(
+            args.device
+        )
+        mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(
+            args.device
+        )
 
         with torch.no_grad():
             pred = model(mel_batch, img_batch)
