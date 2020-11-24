@@ -45,14 +45,16 @@ def three_videos_demo():
         return "there is no sound in form!"
     image = request.files["image"]
     sound = request.files["sound"]
-    path = os.path.join(app.config["UPLOAD_FOLDER"], image.filename + ".webm")
+    imageFilename = image.filename + ".webm"
+    soundFilename = sound.filename + ".mp4"
+    path = os.path.join(app.config["UPLOAD_FOLDER"], imageFilename)
     image.save(path)
-    path = os.path.join(app.config["UPLOAD_FOLDER"], sound.filename + ".mp4")
+    path = os.path.join(app.config["UPLOAD_FOLDER"], soundFilename)
     sound.save(path)
     main(
         "./checkpoints/wav2lip_gan.pth",
-        "./sample_data/" + image.filename,
-        "./sample_data/" + sound.filename,
+        "./sample_data/" + imageFilename,
+        "./sample_data/" + soundFilename,
         resize_factor=1,
         outfile="./static/result_voice.mp4",
     )
