@@ -11,9 +11,10 @@ UPLOAD_FOLDER = "./sample_data"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # python3 -m flask run --port 9000 --no-debugger --no-reload
-@app.route("/")
-def index():
-    return app.send_static_file("index.html")
+@app.route('/', defaults=dict(filename="index.html"))
+@app.route('/<path:filename>', methods=['GET', 'POST'])
+def index(filename):
+    return app.send_static_file(filename)
 
 
 @app.route("/upload_file", methods=["GET", "POST"])
@@ -76,7 +77,7 @@ def three_videos_demo():
 
 @app.route("/three_videos_is_up", methods=["GET", "POST"])
 def three_videos_is_up():
-    with open("./static/video.html", "rb") as bites:
+    with open("./static/index.html", "rb") as bites:
         response = send_file(
             io.BytesIO(bites.read()),
             as_attachment=True,
