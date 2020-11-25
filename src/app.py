@@ -44,24 +44,24 @@ def upload_file():
 def three_videos_demo():
     if "image" not in request.files:
         return "there is no image in form!"
-    if "sound" not in request.files:
-        return "there is no sound in form!"
+    # if "sound" not in request.files:
+    #     return "there is no sound in form!"
     image = request.files["image"]
-    sound = request.files["sound"]
+    # sound = request.files["sound"]
     scale = int(request.form["webcamScale"], 10)
     imageFilename = image.filename + ".webm"
-    soundFilename = sound.filename + ".wav"
+    # soundFilename = sound.filename + ".wav"
     path = os.path.join(app.config["UPLOAD_FOLDER"], imageFilename)
     image.save(path)
-    path = os.path.join(app.config["UPLOAD_FOLDER"], soundFilename)
-    sound.save(path)
-    main(
-        "./checkpoints/wav2lip_gan.pth",
-        "./sample_data/" + imageFilename,
-        "./sample_data/" + soundFilename,
-        resize_factor=scale,
-        outfile="./static/result_voice.mp4",
-    )
+    # path = os.path.join(app.config["UPLOAD_FOLDER"], soundFilename)
+    # sound.save(path)
+    # main(
+    #     "./checkpoints/wav2lip_gan.pth",
+    #     "./sample_data/" + imageFilename,
+    #     "./sample_data/" + '2.wav',
+    #     resize_factor=scale,
+    #     outfile="./static/result_voice.mp4",
+    # )
 
     with open("./static/result_voice.mp4", "rb") as bites:
         response = send_file(
