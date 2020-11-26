@@ -55,13 +55,13 @@ def three_videos_demo():
     image.save(path)
     # path = os.path.join(app.config["UPLOAD_FOLDER"], soundFilename)
     # sound.save(path)
-    # main(
-    #     "./checkpoints/wav2lip_gan.pth",
-    #     "./sample_data/" + imageFilename,
-    #     "./sample_data/" + '2.wav',
-    #     resize_factor=scale,
-    #     outfile="./static/result_voice.mp4",
-    # )
+    main(
+        "./checkpoints/wav2lip_gan.pth",
+        "./sample_data/" + imageFilename,
+        "./sample_data/" + '2.wav',
+        resize_factor=scale,
+        outfile="./static/result_voice.mp4",
+    )
 
     with open("./static/result_voice.mp4", "rb") as bites:
         response = send_file(
